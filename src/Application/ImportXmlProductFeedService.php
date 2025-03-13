@@ -7,53 +7,113 @@ use App\Infrastructure\XmlProductFeedParser;
 use App\Entity\Product;
 use App\Entity\Category;
 
+use function Symfony\Component\String\u;
+
 class ImportXmlProductFeedService
 {
-	public function __construct(
-		private XmlProductFeedParser $parser,
-		private EntityManagerInterface $entityManager
-	) {}
+    public function __construct(
+        private XmlProductFeedParser $parser,
+        private EntityManagerInterface $entityManager
+    ) {}
 
-	public function loadFeed($url)
-	{
-		$category = new Category();
-		$category->setName('Root Category');
-		$category->setLevel(0);
-		$this->entityManager->persist($category);
-        $this->entityManager->flush();
+    public function loadFeed($url, $batchSize)
+    {
+        $this->entityManager->getRepository(Product::class)->deleteAllRecords();
+        $this->entityManager->getRepository(Category::class)->deleteAllRecords();
 
-		$products = $this->parser->parse($url);
+        $products = $this->parser->parse($url);
 
 
         $batchCounter = 0;
-        $batchSize = 250;
         $batchProducts = [];
-		foreach ($products as $proto) {
-			$sku = $proto['sku'];
-	        $product = 
-	        	$batchProducts[$sku]
-	        	?? 
-	        	$this->entityManager->getRepository(Product::class)->findOneBySku($sku)
-	        	??
-	        	new Product()
-	        ;
-	        $product->setTitle($proto['title']);
+        $batchCategories = [];
+        foreach ($products as $proto) {
+            $categoryNames = explode('|', $proto['category']);
+            $parentCategory = null;
+            $path = '';
+            foreach($categoryNames as $level => $categoryName) {
+                $categoryName = u($categoryName)->trim();
+                $path = $level === 0 ? (String)$categoryName : ($path . '|' . $categoryName);
+                $category = $batchCategories[$path]
+                    ?? 
+                    $this->entityManager
+                        ->getRepository(Category::class)
+                        ->findOneByPath($path);
+
+                if (is_null($category)) {
+                    $category = new Category();
+                    $category->setName($categoryName);
+                    $category->setIsLeaf($level === count($categoryNames) - 1);
+                    if ($parentCategory && $parentCategory->getId()) {
+                        $category->setParentId($parentCategory->getId());
+                    } else {
+                        $category->setParent($parentCategory);
+                    }
+                    $category->setPath($path);
+                    $batchCategories[$path] = $category;
+                    $this->entityManager->persist($category);
+                    // echo "new/";
+                }
+
+                $parentCategory = $category;
+            }
+
+            $sku = $proto['sku'];
+            $product = 
+                $batchProducts[$sku]
+                ?? 
+                $this->entityManager->getRepository(Product::class)->findOneBySku($sku)
+                ??
+                new Product()
+            ;
+            
+            $product->setTitle($proto['title']);
             $product->setDescription($proto['description']);
             $product->setSku($sku);
             $product->setPrice($proto['price']);
             $product->setStock($proto['stock']);
-            $product->setCategory($category);
+            if ($category->getId()) {
+                $product->setCategoryId($category->getId());
+            } else {
+                $product->setCategory($category);
+            }
+            
             $batchProducts[$sku] = $product;
-        	$this->entityManager->persist($product);
-        	if ($batchCounter++ >= $batchSize) {
-        		$this->entityManager->flush();
-        		$batchProducts = [];
-        		$batchCounter = 0;
-        		echo('+');
-        	}
-		}
-		
-		// print_r($categories);
-		return true;
-	}
+            $this->entityManager->persist($product);
+
+            if ($batchCounter++ >= $batchSize) {
+                $this->entityManager->flush();
+                $this->entityManager->clear();
+                $batchProducts = [];
+                $batchCategories = [];
+                $batchCounter = 0;
+                echo("+");
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Parse category path into an array of category names
+     * @return array
+     */
+    private function parseCategoryPath(string $path): array
+    {
+        $categories = explode(' | ', $path);
+        $result = [];
+        $currentPath = '';
+        
+        foreach ($categories as $index => $categoryName) {
+            $currentPath = $index === 0 ? $categoryName : $currentPath . ' | ' . $categoryName;
+            $result[] = [
+                'name' => $categoryName,
+                'path' => $currentPath,
+                'level' => $index,
+                'is_leaf' => ($index === count($categories) - 1)
+            ];
+        }
+        
+        return $result;
+    }
 }

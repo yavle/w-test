@@ -31,13 +31,20 @@ class CategoryRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Category
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findOneByPath($value): ?Category
+    {
+       return $this->createQueryBuilder('c')
+           ->andWhere('c.path = :val')
+           ->setParameter('val', $value)
+           ->getQuery()
+           ->getOneOrNullResult()
+       ;
+    }
+
+    public function deleteAllRecords(){
+        return $this->createQueryBuilder('e')
+                 ->delete()
+                 ->getQuery()
+                 ->execute();
+    }
 }
