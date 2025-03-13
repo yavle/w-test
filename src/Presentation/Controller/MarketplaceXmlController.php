@@ -18,7 +18,7 @@ class MarketplaceXmlController
         $faker = \Faker\Factory::create();
         $categories = [];
         for ($i = 0; $i < 5000; $i++) {
-            $categories[] = $faker->firstName;
+            $categories[] = $faker->firstName . ' | ' . $faker->firstName . ' | ' . $faker->firstName;
         }
 
         $products = [];
@@ -26,10 +26,7 @@ class MarketplaceXmlController
             $products[] = [
                 'title' => 'title' . $i,
                 'description' => 'description' . $i,
-                'category' =>
-                    $categories[array_rand($categories)] . ' | '
-                    . $categories[array_rand($categories)] . ' | '
-                    . $categories[array_rand($categories)],
+                'category' => $categories[array_rand($categories)],
                 'sku' => random_int(100, 999) . '/' . random_int(10,99),
                 'price' => random_int(0, 10000) . '.' . random_int(0, 99), 
                 'stock' => random_int(0, 10000),
