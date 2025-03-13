@@ -18,6 +18,7 @@
         "symfony/dotenv": "7.2.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.2.*",
+        "symfony/http-client": "7.2.*",
         "symfony/runtime": "7.2.*",
         "symfony/yaml": "7.2.*"
     },
@@ -52,6 +53,7 @@
     },
     "scripts": {
         "auto-scripts": {
+            "php -dmemory_limit=512M bin/console cache:clear": "script",
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
@@ -71,5 +73,9 @@
             "require": "7.2.*",
             "docker": true
         }
+    },
+    "require-dev": {
+        "fzaninotto/faker": "^1.5",
+        "symfony/maker-bundle": "^1.62"
     }
 }
