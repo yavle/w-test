@@ -18,6 +18,8 @@ use App\Application\ImportXmlProductFeedService;
 )]
 class ImportXmlFeedCommand extends Command
 {
+    private $batchSize = 200;
+
     public function __construct(private ImportXmlProductFeedService $service)
     {
         parent::__construct();
@@ -27,7 +29,7 @@ class ImportXmlFeedCommand extends Command
     {
         $this
             ->addArgument('url', InputArgument::REQUIRED, 'Xml product feed url')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
+            ->addOption('batch', 'b', InputOption::VALUE_OPTIONAL, "Write batch size (default {$this->batchSize})")
         ;
     }
 
@@ -36,15 +38,18 @@ class ImportXmlFeedCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $url = $input->getArgument('url');
 
-        if ($url) {
-            $io->note(sprintf('Reading feed: %s', $url));
-        }
+        $init = microtime(1);
 
-        if ($input->getOption('option1')) {
-            // ...
+        if ($input->getOption('batch') && (int)$input->getOption('batch') != 0) {
+            $this->batchSize = (int)$input->getOption('batch');
         }
-        $this->service->loadFeed($url);
-        $io->success('Feed has been successfully downloaded.');
+        
+        $io->note(sprintf('Reading feed: %s, batch size: %s', $url, $this->batchSize));
+
+
+        $this->service->loadFeed($url, $this->batchSize);
+
+        $io->success('Feed has been successfully downloaded in: ' . (microtime(1) - $init));
 
         return Command::SUCCESS;
     }

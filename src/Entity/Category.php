@@ -7,7 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: CategoryRepository::class)]
+#[
+    ORM\Entity(repositoryClass: CategoryRepository::class),
+    ORM\Index(columns: ['path'], name: 'idx_path'),
+]
 class Category
 {
     #[ORM\Id]
@@ -26,6 +29,7 @@ class Category
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
     private ?self $parent = null;
+    private int $parent_id;
 
     /**
      * @var Collection<int, self>
@@ -33,8 +37,11 @@ class Category
     #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent')]
     private Collection $children;
 
-    #[ORM\Column(nullable: false, options: ["default" => 0])]
-    private ?int $level = null;
+    #[ORM\Column(length: 1024, unique: true)]
+    private ?string $path = null;
+
+    #[ORM\Column]
+    private ?bool $is_leaf = null;
 
     public function __construct()
     {
@@ -89,18 +96,6 @@ class Category
         return $this;
     }
 
-    public function getLevel(): ?int
-    {
-        return $this->level;
-    }
-
-    public function setLevel(int $level): static
-    {
-        $this->level = $level;
-
-        return $this;
-    }
-
     public function getParent(): ?self
     {
         return $this->parent;
@@ -109,6 +104,13 @@ class Category
     public function setParent(?self $parent): static
     {
         $this->parent = $parent;
+
+        return $this;
+    }
+
+    public function setParentId(int $parentId): static
+    {
+        $this->parent_id = $parentId;
 
         return $this;
     }
@@ -139,6 +141,30 @@ class Category
                 $child->setParent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    public function setPath(string $path): static
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    public function isLeaf(): ?bool
+    {
+        return $this->is_leaf;
+    }
+
+    public function setIsLeaf(bool $is_leaf): static
+    {
+        $this->is_leaf = $is_leaf;
 
         return $this;
     }

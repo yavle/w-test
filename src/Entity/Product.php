@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
     ORM\Entity(repositoryClass: ProductRepository::class),
     ORM\Index(columns: ['price'], name: 'idx_price'),
     ORM\Index(columns: ['stock'], name: 'idx_stock'),
+    ORM\Index(columns: ['sku'], name: 'idx_sku'),
 ]
 class Product
 {
@@ -37,6 +38,8 @@ class Product
     #[ORM\ManyToOne(inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Category $category = null;
+
+    private int $category_id;
 
     public function getId(): ?int
     {
@@ -114,4 +117,11 @@ class Product
 
         return $this;
     }
+
+    public function setCategoryId(int $categoryId): static
+    {
+        $this->category_id = $categoryId;
+
+        return $this;
+    }    
 }

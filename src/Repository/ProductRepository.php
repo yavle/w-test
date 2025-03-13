@@ -40,4 +40,11 @@ class ProductRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
+
+    public function deleteAllRecords(){
+        return $this->createQueryBuilder('e')
+                 ->delete()
+                 ->getQuery()
+                 ->execute();
+    }
 }
