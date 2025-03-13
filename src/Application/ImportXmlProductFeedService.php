@@ -18,11 +18,7 @@ class ImportXmlProductFeedService
 
     public function loadFeed($url, $batchSize)
     {
-        $this->entityManager->getRepository(Product::class)->deleteAllRecords();
-        $this->entityManager->getRepository(Category::class)->deleteAllRecords();
-
         $products = $this->parser->parse($url);
-
 
         $batchCounter = 0;
         $batchProducts = [];
