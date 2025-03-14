@@ -40,15 +40,13 @@ class ImportXmlProductFeedService
                     $category = new Category();
                     $category->setName($categoryName);
                     $category->setIsLeaf($level === count($categoryNames) - 1);
-                    if ($parentCategory && $parentCategory->getId()) {
-                        $category->setParentId($parentCategory->getId());
-                    } else {
-                        $category->setParent($parentCategory);
-                    }
+                    $category->setParent($parentCategory);
                     $category->setPath($path);
                     $batchCategories[$path] = $category;
                     $this->entityManager->persist($category);
-                    // echo "new/";
+                    if ($parentCategory) {
+                        $this->entityManager->persist($parentCategory);
+                    }
                 }
 
                 $parentCategory = $category;
@@ -68,13 +66,10 @@ class ImportXmlProductFeedService
             $product->setSku($sku);
             $product->setPrice($proto['price']);
             $product->setStock($proto['stock']);
-            if ($category->getId()) {
-                $product->setCategoryId($category->getId());
-            } else {
-                $product->setCategory($category);
-            }
+            $product->setCategory($category);
             
             $batchProducts[$sku] = $product;
+            $this->entityManager->persist($category);
             $this->entityManager->persist($product);
 
             if ($batchCounter++ >= $batchSize) {
