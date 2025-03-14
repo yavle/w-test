@@ -27,15 +27,15 @@ class Category
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'category')]
     private Collection $products;
 
-    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
+    #[ORM\ManyToOne(targetEntity: self::class)]
     private ?self $parent = null;
     private int $parent_id;
 
-    /**
-     * @var Collection<int, self>
-     */
-    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent')]
-    private Collection $children;
+    // /**
+    //  * @var Collection<int, self>
+    //  */
+    // #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent')]
+    // private Collection $children;
 
     #[ORM\Column(length: 1024, unique: true)]
     private ?string $path = null;
@@ -46,7 +46,7 @@ class Category
     public function __construct()
     {
         $this->products = new ArrayCollection();
-        $this->children = new ArrayCollection();
+        // $this->children = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -115,35 +115,35 @@ class Category
         return $this;
     }
 
-    /**
-     * @return Collection<int, self>
-     */
-    public function getChildren(): Collection
-    {
-        return $this->children;
-    }
+    // /**
+    //  * @return Collection<int, self>
+    //  */
+    // public function getChildren(): Collection
+    // {
+    //     return $this->children;
+    // }
 
-    public function addChild(self $child): static
-    {
-        if (!$this->children->contains($child)) {
-            $this->children->add($child);
-            $child->setParent($this);
-        }
+    // public function addChild(self $child): static
+    // {
+    //     if (!$this->children->contains($child)) {
+    //         $this->children->add($child);
+    //         $child->setParent($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeChild(self $child): static
-    {
-        if ($this->children->removeElement($child)) {
-            // set the owning side to null (unless already changed)
-            if ($child->getParent() === $this) {
-                $child->setParent(null);
-            }
-        }
+    // public function removeChild(self $child): static
+    // {
+    //     if ($this->children->removeElement($child)) {
+    //         // set the owning side to null (unless already changed)
+    //         if ($child->getParent() === $this) {
+    //             $child->setParent(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getPath(): ?string
     {
