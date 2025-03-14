@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Product;
+use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,20 +17,39 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-    //    /**
-    //     * @return Product[] Returns an array of Product objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return Product[]
+     */
+    public function findByCategory(
+        Category $category,
+        int $page = 1,
+        int $perPage = 500,
+        float $minPrice = 0,
+        float|null $maxPrice = null,
+        bool $exclude = false
+    ): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $queryBuilder = $this->createQueryBuilder('p')
+            ->andWhere('p.category = :category')
+            ->setParameter('category', $category)
+            ->andWhere('p.price >= :minPrice')
+            ->setParameter('minPrice', $minPrice)
+            ->orderBy('p.sku', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($perPage);
+        if (!is_null($maxPrice)) {
+            $queryBuilder
+                ->andWhere('p.price <= :maxPrice')
+                ->setParameter('maxPrice', $maxPrice);
+        }
+        if ($exclude) {
+            $queryBuilder->andWhere('p.stock > 0');
+        }
+        return $queryBuilder
+            ->getQuery()
+            ->getResult();
+    }
 
     public function findOneBySku($value): ?Product
     {

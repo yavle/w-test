@@ -1,10 +1,14 @@
 <?php
 namespace App\Application;
 
+use App\Repository\CategoryRepository;
+
 class ListCategoriesService
 {
-	public function getList()
+	public function __construct(private CategoryRepository $repository) { }
+
+	public function getList(CategoryDTO $dto)
 	{
-		return 'TestList';
+		return $this->repository->findAll($dto->page, $dto->perPage);
 	}
 }
